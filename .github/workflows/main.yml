@@ -1,0 +1,44 @@
+name: Deploy Bot 24/7
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    # هر ۴ ساعت و ۳۰ دقیقه (بیشتر از ۵ بار در روز)
+    - cron: '30 */4 * * *'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350  # ۵ ساعت و ۵۰ دقیقه
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Keep bot alive
+      env:
+        BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
+      run: |
+        # محاسبه زمان باقی‌مانده تا ۶ ساعت
+        END_TIME=$(($(date +%s) + 21000))
+        
+        while [ $(date +%s) -lt $END_TIME ]; do
+          # اجرای ربات به مدت ۱ ساعت
+          timeout 3600 python bot.py || true
+          echo "Restarting bot session..."
+          sleep 5
+        done
+        
+        echo "6-hour limit approaching. Exiting for GitHub to restart."
