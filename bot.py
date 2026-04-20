@@ -278,23 +278,21 @@ def download_file_with_progress(url: str, chat_id: int, status_msg_id: int) -> O
 def split_file_to_zip_parts(file_path: str, max_size: int = MAX_FILE_SIZE) -> Tuple[List[str], int]:
     """
     فایل را به قطعات ZIP استاندارد تقسیم می‌کند.
-    این روش یک فایل ZIP موقت می‌سازد و سپس آن را تکه تکه می‌کند.
+    از pyzipper.ZipFile استفاده می‌کند که نیازی به رمز عبور ندارد.
     """
     base_name = os.path.basename(file_path)
     zip_file_path = os.path.join(TEMP_DIR, f"{base_name}.zip")
 
-    # 1. ساخت یک فایل ZIP معمولی و سالم با استفاده از pyzipper
+    # 1. ساخت فایل ZIP استاندارد با pyzipper.ZipFile (بدون رمز)
     try:
-        with pyzipper.AESZipFile(zip_file_path, 'w',
-                                 compression=pyzipper.ZIP_DEFLATED,
-                                 encryption=pyzipper.WZ_AES) as zf:
+        with pyzipper.ZipFile(zip_file_path, 'w', compression=pyzipper.ZIP_DEFLATED) as zf:
             zf.write(file_path, base_name)
         logger.info(f"Standard ZIP created at {zip_file_path}")
     except Exception as e:
         logger.error(f"Failed to create ZIP file: {e}")
         return [], 0
 
-    # 2. تقسیم فایل ZIP به قطعات کوچکتر (روش استاندارد)
+    # 2. تقسیم فایل ZIP به قطعات کوچکتر
     part_paths = []
     part_num = 1
     try:
@@ -310,7 +308,6 @@ def split_file_to_zip_parts(file_path: str, max_size: int = MAX_FILE_SIZE) -> Tu
                 part_num += 1
     except Exception as e:
         logger.error(f"Failed to split ZIP file: {e}")
-        # پاکسازی در صورت خطا
         for p in part_paths:
             if os.path.exists(p):
                 os.remove(p)
@@ -516,7 +513,7 @@ def process_download_url(chat_id: int, reply_to: int, url: str):
             else:
                 edit_message_text(chat_id, status_msg, "❌ آپلود فایل با خطا مواجه شد.")
         else:
-            # تقسیم و آپلود قطعات با روش جدید pyzipper
+            # تقسیم و آپلود قطعات با روش جدید (pyzipper.ZipFile)
             edit_message_text(chat_id, status_msg, "📦 در حال فشرده‌سازی و تقسیم فایل به قطعات ۱۹ مگابایتی...")
             parts, parts_count = split_file_to_zip_parts(file_path)
 
