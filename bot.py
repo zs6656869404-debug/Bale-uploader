@@ -43,7 +43,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
+# conf
 # ================= دیتابیس =================
 def init_db():
     conn = sqlite3.connect(DB_FILE)
