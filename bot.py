@@ -10,7 +10,7 @@ import pyzipper
 from datetime import datetime
 from typing import Optional, Dict, List, Tuple
 from urllib.parse import urlparse, unquote
-
+#shit
 # ================= تنظیمات =================
 TOKEN = os.environ.get("BALE_BOT_TOKEN")
 if not TOKEN:
